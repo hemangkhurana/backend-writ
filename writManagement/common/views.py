@@ -57,6 +57,7 @@ def signup(request):
         user_data.pop('batch')
         new_user = User.objects.create(**user_data)
         new_user.save()
+        return JsonResponse({'success': True, 'message': 'user created successfully'})
     except Exception as err:
         print(err)
         return JsonResponse({'error': "Some Error Has Occured in creating auth.user!", 'success': False})
