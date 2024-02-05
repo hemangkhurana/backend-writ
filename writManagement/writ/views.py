@@ -42,8 +42,13 @@ def addNewWrit(request):
     try:    
         writNumber = request.POST['writNumber']
         oldWrit = writs.find_one({"writNumber" : writNumber})
+        # for x in request.POST:
+        #     print(x, request.POST[x])
         
         if oldWrit:
+            if request.POST['isAddNew'] == 'true':
+                return JsonResponse({'success' :False, 'error' : 'Cannot add same writ again'})
+            
             for key in request.POST:            
                 if key not in writCheck or request.POST[key] == None:   
                     continue
@@ -52,6 +57,9 @@ def addNewWrit(request):
                         oldWrit[key] = request.POST[key]
                 else:        
                     oldWrit[key] = request.POST[key]
+                    
+            if 'writRespondentNames' in data:
+                writData['writRespondentNames'] = data['writRespondentNames'].split(",")
                 
             for attach in attachments:
                 if attach in request.FILES:
@@ -79,7 +87,6 @@ def addNewWrit(request):
                 oldWrit['writMaxValue'][5-5] = 1
                 
             writs.replace_one({"writNumber" : writNumber}, oldWrit)
-            print(oldWrit)
             return JsonResponse({'success' : True, 'message' : 'Writ updated successfully'})
             
         else:
@@ -93,6 +100,8 @@ def addNewWrit(request):
                 if key in writCheck:
                     writData[key] = data[key]
             
+            if 'writRespondentNames' in data:
+                writData['writRespondentNames'] = data['writRespondentNames'].split(",")
             for attach in attachments:
                 if attach in request.FILES:
                     file = request.FILES.get(attach)
@@ -108,8 +117,8 @@ def addNewWrit(request):
             writMaxValue[5-0] = 1
             writData['writMaxValue'] = writMaxValue
             
-            print(writData)
             writs.insert_one(writData)
+            # print(writData)
             return JsonResponse({'success' : True, 'message' : 'New writ added succesfully'})
             
     except Exception as err:
@@ -121,7 +130,6 @@ def getWrit(request):
     try:
         writNumber = json.loads(request.body).get('writNumber',None)
         result = writs.find_one({'writNumber' : writNumber})
-        print(result)
         if result is not None:
             temp = {}
             for x in result:
@@ -150,7 +158,14 @@ def getLatestWrit(request):
             i+=1
             for col in matrix:
                 if matrix[col] in x:
-                    temp[col] = x[matrix[col]]
+                    if matrix[col] == 'writRespondentNames' and isinstance(x[matrix[col]], list):
+                        ans = ""
+                        for name in x[matrix[col]]:
+                            ans+= name + ", "
+                        ans = ans[:-2]
+                        temp[col] = ans
+                    else:
+                        temp[col] = x[matrix[col]]
             data.append(temp)
         return JsonResponse({'success' : True, 'data' : data, 'message' : 'Sent data'})
     except Exception as err:
@@ -229,8 +244,6 @@ def filterWrit(request):
         if  dateQuery != {}:
             writFilter.append(dateQuery)   
         
-        print(writFilter)    
-
         filter = {"$and" : writFilter}
         results = writs.find(filter)
         
@@ -244,7 +257,15 @@ def filterWrit(request):
             temp['id'] = i
             i+=1
             for col in matrix:
-                temp[col] = x[matrix[col]]
+                if matrix[col] in x:
+                    if matrix[col] == 'writRespondentNames' and isinstance(x[matrix[col]], list):
+                        ans = ""
+                        for name in x[matrix[col]]:
+                            ans+= name + ", "
+                        ans = ans[:-2]
+                        temp[col] = ans
+                    else:
+                        temp[col] = x[matrix[col]]
             data.append(temp)
         
         return JsonResponse({'success' : True, 'data' : data})
@@ -390,7 +411,6 @@ def addCourtOrder(request):
             oldWrit['writMaxValue'][5-3] = 1
 
         writs.replace_one(filter, oldWrit)
-        # print(oldWrit)
         return JsonResponse({'success' : True, 'message' : 'Court Order updated succesfully!'})
     except Exception as err:
         return JsonResponse({'success' : False, 'error' : err})
@@ -414,10 +434,6 @@ def getCounters(request):
 
         
         
-    # data = json.loads(request.body)
-    # print(data)
-    
-    
 @require_http_methods(['POST'])
 def getCourtOrders(request):
     try:
