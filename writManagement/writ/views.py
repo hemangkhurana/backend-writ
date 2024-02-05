@@ -80,6 +80,7 @@ def addNewWrit(request):
                 
             writs.replace_one({"writNumber" : writNumber}, oldWrit)
             print(oldWrit)
+            return JsonResponse({'success' : True, 'message' : 'Writ updated successfully'})
             
         else:
             writData = {}
@@ -109,157 +110,165 @@ def addNewWrit(request):
             
             print(writData)
             writs.insert_one(writData)
+            return JsonResponse({'success' : True, 'message' : 'New writ added succesfully'})
             
-        return JsonResponse({'success' : True})
     except Exception as err:
-        return JsonResponse({'success':False,'error' : err})
+        return JsonResponse({'success':False,'error' : err, 'message' : 'Some error occured!'})
 
     
 @require_http_methods(['POST'])
 def getWrit(request):
-    writNumber = json.loads(request.body).get('writNumber',None)
-    result = writs.find_one({'writNumber' : writNumber})
-    print(result)
-    if result is not None:
-        temp = {}
-        for x in result:
-            if x!='_id':
-                temp[x] = result[x]
-            else:
-                temp[x] = str(result[x])
+    try:
+        writNumber = json.loads(request.body).get('writNumber',None)
+        result = writs.find_one({'writNumber' : writNumber})
+        print(result)
+        if result is not None:
+            temp = {}
+            for x in result:
+                if x!='_id':
+                    temp[x] = result[x]
+                else:
+                    temp[x] = str(result[x])
+            
+            return JsonResponse({'success' : True, 'data' : temp})
         
-        return JsonResponse({'success' : True, 'data' : temp})
-    
-    else:
-        return JsonResponse({'success': False, 'error' : 'Writ not found'})
+        else:
+            return JsonResponse({'success': False, 'message' : 'Writ not found'})
+    except Exception as err:
+        return JsonResponse({'success': False, 'error' : err, 'message' : 'Some error occured!'})
     
 @require_http_methods(['GET'])
 def getLatestWrit(request):
-    info = writs.find().sort('WritDate',-1).limit(20)
-    info = writs.find().sort('WritDate',-1).limit(20)
-    data = []
-    i = 1
-    for x in info:
-        temp = {}
-        temp['id'] = i
-        i+=1
-        for col in matrix:
-            if matrix[col] in x:
-                temp[col] = x[matrix[col]]
-        data.append(temp)
-    return JsonResponse({'success' : True, 'data' : data})
+    try:
+        info = writs.find().sort('WritDate',-1).limit(20)
+        info = writs.find().sort('WritDate',-1).limit(20)
+        data = []
+        i = 1
+        for x in info:
+            temp = {}
+            temp['id'] = i
+            i+=1
+            for col in matrix:
+                if matrix[col] in x:
+                    temp[col] = x[matrix[col]]
+            data.append(temp)
+        return JsonResponse({'success' : True, 'data' : data, 'message' : 'Sent data'})
+    except Exception as err:
+        return JsonResponse({'success': False, 'error' : err, 'message' : 'Some error occured!'})
 
 
 @require_http_methods(['POST'])
 def filterWrit(request):
-    oldPostData = json.loads(request.body)
-    writFilter = []
-    
-    filterDates = {}
-    for x in oldPostData:
-        if x is None or oldPostData[x] == '':
-            continue
+    try : 
+        oldPostData = json.loads(request.body)
+        writFilter = []
         
-        if x == 'searchText':
-            searchText = oldPostData[x]
-            searchText = searchText.strip()
-            if searchText != '':
-                writFilter.append({"$text": {"$search": searchText}})
-                
-        else:
-            y = x[6:]
-            y = y[0].lower() + y[1:]
-            if (y == 'writRespondentNames' or y == 'writPriority'):
-                writFilter.append({y : {"$regex": oldPostData[x], "$options": "i"} }) 
-            elif x == 'filterStatus':
-                query = {
-                    '$expr': {
-                        '$cond': {
-                            'if': {'$lte': [{'$indexOfArray': ['$writMaxValue', 1]}, 5-oldPostData[x]]},
-                            'then': True,
-                            'else': False
+        filterDates = {}
+        for x in oldPostData:
+            if x is None or oldPostData[x] == '':
+                continue
+            
+            if x == 'searchText':
+                searchText = oldPostData[x]
+                searchText = searchText.strip()
+                if searchText != '':
+                    writFilter.append({"$text": {"$search": searchText}})
+                    
+            else:
+                y = x[6:]
+                y = y[0].lower() + y[1:]
+                if (y == 'writRespondentNames' or y == 'writPriority'):
+                    writFilter.append({y : {"$regex": oldPostData[x], "$options": "i"} }) 
+                elif x == 'filterStatus':
+                    query = {
+                        '$expr': {
+                            '$cond': {
+                                'if': {'$lte': [{'$indexOfArray': ['$writMaxValue', 1]}, 5-oldPostData[x]]},
+                                'then': True,
+                                'else': False
+                            }
                         }
                     }
-                }
-                writFilter.append(query)
-            else:
-                if x == 'filterEndDate' or x == 'filterStartDate':
-                    filterDates[x] = oldPostData[x]
-        
-    dateQuery = {}
-    if len(filterDates) == 2:
-        startDate = datetime.strptime(filterDates['filterStartDate'], '%Y-%m-%d')
-        endDate =  datetime.strptime(filterDates['filterEndDate'], '%Y-%m-%d')
-        dateQuery = {
-                '$or': [
-                    {'filterDateList': {'$elemMatch': {'$gte': startDate, '$lte': endDate}}},
-                    {'filterDateList.2': {'$elemMatch': {'$gte': startDate, '$lte': endDate}}},
-                    {'filterDateList.3': {'$elemMatch': {'$gte': startDate, '$lte': endDate}}}
-                ]
-            }
-    
-    if len(filterDates) == 1:
-        if 'filterStartDate' in filterDates:
+                    writFilter.append(query)
+                else:
+                    if x == 'filterEndDate' or x == 'filterStartDate':
+                        filterDates[x] = oldPostData[x]
+            
+        dateQuery = {}
+        if len(filterDates) == 2:
             startDate = datetime.strptime(filterDates['filterStartDate'], '%Y-%m-%d')
-            dateQuery = {
-                '$or': [
-                    {'filterDateList': {'$elemMatch': {'$gte': startDate}}},
-                    {'filterDateList.2': {'$elemMatch': {'$gte': startDate}}},
-                    {'filterDateList.3': {'$elemMatch': {'$gte': startDate}}}
-                ]
-            }    
-        else:
             endDate =  datetime.strptime(filterDates['filterEndDate'], '%Y-%m-%d')
             dateQuery = {
-                '$or': [
-                    {'filterDateList': {'$elemMatch': {'$lte': endDate}}},
-                    {'filterDateList.2': {'$elemMatch': {'$lte': endDate}}},
-                    {'filterDateList.3': {'$elemMatch': {'$lte': endDate}}}
-                ]
-            }
-                
-    if  dateQuery != {}:
-        writFilter.append(dateQuery)   
-    
-    print(writFilter)    
+                    '$or': [
+                        {'filterDateList': {'$elemMatch': {'$gte': startDate, '$lte': endDate}}},
+                        {'filterDateList.2': {'$elemMatch': {'$gte': startDate, '$lte': endDate}}},
+                        {'filterDateList.3': {'$elemMatch': {'$gte': startDate, '$lte': endDate}}}
+                    ]
+                }
+        
+        if len(filterDates) == 1:
+            if 'filterStartDate' in filterDates:
+                startDate = datetime.strptime(filterDates['filterStartDate'], '%Y-%m-%d')
+                dateQuery = {
+                    '$or': [
+                        {'filterDateList': {'$elemMatch': {'$gte': startDate}}},
+                        {'filterDateList.2': {'$elemMatch': {'$gte': startDate}}},
+                        {'filterDateList.3': {'$elemMatch': {'$gte': startDate}}}
+                    ]
+                }    
+            else:
+                endDate =  datetime.strptime(filterDates['filterEndDate'], '%Y-%m-%d')
+                dateQuery = {
+                    '$or': [
+                        {'filterDateList': {'$elemMatch': {'$lte': endDate}}},
+                        {'filterDateList.2': {'$elemMatch': {'$lte': endDate}}},
+                        {'filterDateList.3': {'$elemMatch': {'$lte': endDate}}}
+                    ]
+                }
+                    
+        if  dateQuery != {}:
+            writFilter.append(dateQuery)   
+        
+        print(writFilter)    
 
-    filter = {"$and" : writFilter}
-    results = writs.find(filter)
-    
-    if len(writFilter) == 0:
-        results = writs.find().sort('WritDate',-1).limit(20)
-    
-    data = []
-    i = 1
-    for x in results:
-        temp = {}
-        temp['id'] = i
-        i+=1
-        for col in matrix:
-            temp[col] = x[matrix[col]]
-        data.append(temp)
-    
-    return JsonResponse({'success' : True, 'data' : data})
-    
-
+        filter = {"$and" : writFilter}
+        results = writs.find(filter)
+        
+        if len(writFilter) == 0:
+            results = writs.find().sort('WritDate',-1).limit(20)
+        
+        data = []
+        i = 1
+        for x in results:
+            temp = {}
+            temp['id'] = i
+            i+=1
+            for col in matrix:
+                temp[col] = x[matrix[col]]
+            data.append(temp)
+        
+        return JsonResponse({'success' : True, 'data' : data})
+        
+    except Exception as err:
+        return JsonResponse({'success': False, 'error' : err, 'message' : 'Some error occured!'})
 
 
 @require_http_methods(['POST'])
 def downloadPdf(request):
     postData = json.loads(request.body)
-    print(postData)
     writ_number = postData['writNumber']
     oldWrit = writs.find_one({'writNumber' : writ_number})
-    file_id = ''
-    for attach in attachments:
-        if attach in postData:
-            file_id = oldWrit[attach]
-            
-    file_object = gridFSWrit.get(ObjectId(file_id))
-    # Set response headers to force file download
-    response = HttpResponse(file_object, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{file_object.filename}"'
-    return response
+    if oldWrit:
+        file_id = ''
+        for attach in attachments:
+            if attach in postData:
+                file_id = oldWrit[attach]
+                
+        file_object = gridFSWrit.get(ObjectId(file_id))
+        # Set response headers to force file download
+        response = HttpResponse(file_object, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{file_object.filename}"'
+        return response
 
 
 @require_http_methods(['POST'])
@@ -319,15 +328,14 @@ def addCounters(request):
             oldWrit['writMaxValue'][5-2] = 1
 
         writs.replace_one(filter, oldWrit)
-        # print(oldWrit)
-        return JsonResponse({'success' : True})
+        return JsonResponse({'success' : True, 'message' : 'Counter updated succesfully!'})
     except Exception as err:
         return JsonResponse({'success' : False, 'error' : err})
   
     
 @require_http_methods(['POST'])
 def addCourtOrder(request):
-    try:    
+    try:
         counterData = request.POST
         writNumber = counterData['writNumber']
         filter = {"writNumber" : writNumber}
@@ -383,7 +391,7 @@ def addCourtOrder(request):
 
         writs.replace_one(filter, oldWrit)
         # print(oldWrit)
-        return JsonResponse({'success' : True})
+        return JsonResponse({'success' : True, 'message' : 'Court Order updated succesfully!'})
     except Exception as err:
         return JsonResponse({'success' : False, 'error' : err})
   
@@ -402,7 +410,7 @@ def getCounters(request):
         postData = oldWrit['counterList']
         return JsonResponse({'success' : True, 'data' : postData})
     except Exception as err:
-        return JsonResponse({'success':False,'error':'problem in getting third.js from backend'})
+        return JsonResponse({'success':False,'error':'problem in getting third.js from backend', 'message' : 'Some error occured'})
 
         
         
