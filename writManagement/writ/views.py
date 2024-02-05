@@ -29,7 +29,7 @@ matrix = {
         'column5' :  'writDate'
     }
 
-attachments = {'writFileAttachment', 'remarkFileAttachment', 'contemptFileAttachment'}
+attachments = {'writFileAttachment', 'remarkFileAttachment', 'contemptFileAttachment', 'counterFileAttachment', 'courtOrderFileAttachment'}
 
 tempFilterDateList = [None, None, [], [], None, None]
 tempMaxValue = [0,0,0,0,0,0]
@@ -46,7 +46,7 @@ def addNewWrit(request):
         #     print(x, request.POST[x])
         
         if oldWrit:
-            if request.POST['isAddNew'] == 'true':
+            if 'isAddNew' in request.POST and request.POST['isAddNew'] == 'true':
                 return JsonResponse({'success' :False, 'error' : 'Cannot add same writ again'})
             
             for key in request.POST:            
@@ -58,7 +58,7 @@ def addNewWrit(request):
                 else:        
                     oldWrit[key] = request.POST[key]
                     
-            if 'writRespondentNames' in data:
+            if 'writRespondentNames' in request.POST:
                 writData['writRespondentNames'] = data['writRespondentNames'].split(",")
                 
             for attach in attachments:
@@ -138,6 +138,7 @@ def getWrit(request):
                 else:
                     temp[x] = str(result[x])
             
+            print(temp)
             return JsonResponse({'success' : True, 'data' : temp})
         
         else:
@@ -301,32 +302,29 @@ def addCounters(request):
         oldWrit = writs.find_one(filter=filter)
         
         if counterData['flag']=='-1':
-            if 'counterList' in oldWrit:    
-                for counter in oldWrit['counterList']:
-                    if 'counterFileAttachment' in counter and counter['counterFileAttachment'] != '':
-                        gridFSWrit.delete(oldWrit['counterFileAttachment'])
+            if 'counterFileAttachment' in oldWrit and oldWrit['counterFileAttachment'] != '':
+                gridFSWrit.delete(oldWrit['counterFileAttachment'])
+            
             oldWrit['writMaxValue'][5-2] = 0
             oldWrit['filterDateList'][2] = []
             oldWrit['counterList'] = []
         
         elif counterData['flag'] == '1':
-            if 'counterList' in oldWrit:
-                for counter in oldWrit['counterList']:
-                    if 'counterFileAttachment' in counter and counter['counterFileAttachment'] != '':
-                        gridFSWrit.delete(oldWrit['counterFileAttachment'])
+            if 'counterFileAttachment' in oldWrit and oldWrit['counterFileAttachment'] != '':
+                gridFSWrit.delete(oldWrit['counterFileAttachment'])
             
             currentCounters = []
             temp = {}
             for key in counterData:
-                if key == 'writNumber' or key == 'flag':
+                if key == 'writNumber' or key == 'flag' or key == 'counterFileAttachment':
                     continue
                 temp[key] = counterData[key]
             
             if 'counterFileAttachment' in request.FILES and request.FILES.get('counterFileAttachment') != '':
                 file = request.FILES.get('counterFileAttachment')
                 file_id = gridFSWrit.put(file.read(), filename=file.name)
-                temp['counterFileAttachment'] = str(file_id)
-        
+                oldWrit['counterFileAttachment'] = str(file_id)
+
             currentCounters.append(temp)
             oldWrit['filterDateList'][2] = [datetime.strptime(counterData['counterDate'], '%Y-%m-%d') ]
             oldWrit['counterList'] = currentCounters
@@ -335,14 +333,14 @@ def addCounters(request):
         else:
             temp = {}
             for key in counterData:
-                if key == 'writNumber' or key == 'flag':
+                if key == 'writNumber' or key == 'flag' or  key == 'counterFileAttachment':
                     continue
                 temp[key] = counterData[key]
             
-            if 'counterFileAttachment' in request.FILES and request.FILES.get('counterFileAttachment') != '':
-                file = request.FILES.get('counterFileAttachment')
-                file_id = gridFSWrit.put(file.read(), filename=file.name)
-                temp['counterFileAttachment'] = str(file_id)
+            # if 'counterFileAttachment' in request.FILES and request.FILES.get('counterFileAttachment') != '':
+            #     file = request.FILES.get('counterFileAttachment')
+            #     file_id = gridFSWrit.put(file.read(), filename=file.name)
+            #     temp['counterFileAttachment'] = str(file_id)
             
             oldWrit['filterDateList'][2].append(datetime.strptime(counterData['counterDate'], '%Y-%m-%d'))
             oldWrit['counterList'].append(temp)
@@ -363,31 +361,28 @@ def addCourtOrder(request):
         oldWrit = writs.find_one(filter=filter)
         
         if counterData['flag']=='-1':
-            if 'courtOrderList' in oldWrit:    
-                for counter in oldWrit['courtOrderList']:
-                    if 'courtOrderFileAttachment' in counter and counter['courtOrderFileAttachment'] != '':
-                        gridFSWrit.delete(oldWrit['courtOrderFileAttachment'])
+            if 'courtOrderFileAttachment' in oldWrit and oldWrit['courtOrderFileAttachment'] != '':
+                gridFSWrit.delete(oldWrit['courtOrderFileAttachment'])
+                
             oldWrit['writMaxValue'][5-3] = 0
             oldWrit['filterDateList'][3] = []
             oldWrit['courtOrderList'] = []
         
         elif counterData['flag'] == '1':
-            if 'courtOrderList' in oldWrit:
-                for counter in oldWrit['courtOrderList']:
-                    if 'courtOrderFileAttachment' in counter and counter['courtOrderFileAttachment'] != '':
-                        gridFSWrit.delete(oldWrit['courtOrderFileAttachment'])
+            if 'courtOrderFileAttachment' in oldWrit and oldWrit['courtOrderFileAttachment'] != '':
+                gridFSWrit.delete(oldWrit['courtOrderFileAttachment'])
             
             currentCounters = []
             temp = {}
             for key in counterData:
-                if key == 'writNumber' or key == 'flag':
+                if key == 'writNumber' or key == 'flag' or key == 'courtOrderFileAttachment' :
                     continue
                 temp[key] = counterData[key]
             
             if 'courtOrderFileAttachment' in request.FILES and request.FILES.get('courtOrderFileAttachment') != '':
                 file = request.FILES.get('courtOrderFileAttachment')
                 file_id = gridFSWrit.put(file.read(), filename=file.name)
-                temp['courtOrderFileAttachment'] = str(file_id)
+                oldWrit['courtOrderFileAttachment'] = str(file_id)
         
             currentCounters.append(temp)
             oldWrit['filterDateList'][3] = [datetime.strptime(counterData['courtOrderDate'], '%Y-%m-%d') ]
@@ -397,14 +392,14 @@ def addCourtOrder(request):
         else:
             temp = {}
             for key in counterData:
-                if key == 'writNumber' or key == 'flag':
+                if key == 'writNumber' or key == 'flag' or key == 'counterFileAttachment':
                     continue
                 temp[key] = counterData[key]
             
-            if 'courtOrderFileAttachment' in request.FILES and request.FILES.get('courtOrderFileAttachment') != '':
-                file = request.FILES.get('courtOrderFileAttachment')
-                file_id = gridFSWrit.put(file.read(), filename=file.name)
-                temp['courtOrderFileAttachment'] = str(file_id)
+            # if 'courtOrderFileAttachment' in request.FILES and request.FILES.get('courtOrderFileAttachment') != '':
+            #     file = request.FILES.get('courtOrderFileAttachment')
+            #     file_id = gridFSWrit.put(file.read(), filename=file.name)
+            #     oldWrit['courtOrderFileAttachment'] = str(file_id)
             
             oldWrit['filterDateList'][3].append(datetime.strptime(counterData['courtOrderDate'], '%Y-%m-%d'))
             oldWrit['courtOrderList'].append(temp)
