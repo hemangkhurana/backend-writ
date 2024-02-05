@@ -427,6 +427,38 @@ def getCourtOrders(request):
 
 
 @require_http_methods(['POST'])
+def deleteWrit(request):
+    try:
+        writNumber = json.loads(request.body).get('writNumber',None)
+        if writNumber == '':
+            return JsonResponse({'success' : True, 'data' : "Nothing to be deleted"})
+        
+        oldWrit = writs.find_one(filter={'writNumber' : writNumber})
+        if oldWrit:
+            for attach in attachments:
+                if attach in oldWrit and oldWrit[attach] !='':
+                    gridFSWrit.delete(oldWrit[attach])
+
+            if 'counterList' in oldWrit:
+                for counter in oldWrit['counterList']:
+                    if 'counterFileAttachment' in counter and counter['counterFileAttachment'] != '':
+                        gridFSWrit.delete(oldWrit['counterFileAttachment'])
+
+            if 'courtOrderList' in oldWrit:
+                for courtOrder in oldWrit['courtOrderList']:
+                    if 'courtOrderFileAttachment' in courtOrder and courtOrder['courtOrderFileAttachment'] != '':
+                        gridFSWrit.delete(oldWrit['courtOrderFileAttachment'])
+            
+            writs.delete_one({'writNumber' : writNumber})
+
+            return JsonResponse({'success' : True, 'data' : "Writ Deleted"})
+        else:
+            return JsonResponse({'success' : False, 'data' : "Writ doesnot exists"})
+    except Exception as err:
+        return JsonResponse({'success':False,'error':'problem in deleting writ in backend'})
+
+
+@require_http_methods(['POST'])
 def hemang(request):
     try:
         data = request.POST

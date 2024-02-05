@@ -10,5 +10,6 @@ urlpatterns = [
     path('getCounters', views.getCounters),
     path('addCourtOrder', views.addCourtOrder),
     path('getCourtOrders', views.getCourtOrders),
+    path('deleteWrit', views.deleteWrit),
     path('hemang', views.hemang),
 ]
