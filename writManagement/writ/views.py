@@ -392,7 +392,7 @@ def addCourtOrder(request):
         else:
             temp = {}
             for key in counterData:
-                if key == 'writNumber' or key == 'flag' or key == 'counterFileAttachment':
+                if key == 'writNumber' or key == 'flag' or key == 'courtOrderFileAttachment':
                     continue
                 temp[key] = counterData[key]
             
