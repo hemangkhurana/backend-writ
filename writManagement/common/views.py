@@ -12,36 +12,38 @@ User = get_user_model()
 
 @require_http_methods(["POST", "GET"])
 def get_jwt_token(request):
-    if (request.method == 'GET'):
+    if request.method == 'GET':
         return JsonResponse({'error': 'GET Method Not Allowed'})
-    else:
-        try:
-            print("opppppppppppp")
-            user_data = json.loads(request.body)
-            # print(json.loads(request.body.decode()))
-            username = user_data['username']
-            password = user_data['password']
-            # Authenticate the user
-            user = User.objects.get(username=username, password=password)
-            # print(user.pk)
-            if user is None:
-                return JsonResponse({'error': 'Invalid credentials', 'success': False}, status=401)
-            # Set the expiration time for the token
-            expiry_time = datetime.utcnow() + timedelta(days=1)
-            # Create the payload with user id and expiration time
-            payload = {
-                'user_id': user.pk,
-                'exp': expiry_time
-            }
 
-            # Encode the payload into a JWT token
-            token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+    try:
+        user_data = json.loads(request.body)
+        username = user_data['username']
+        password = user_data['password']
+        try :
+            userName = User.objects.get(username=username)
+            try : 
+                user = User.objects.get(username=username, password=password)
+                expiry_time = datetime.utcnow() + timedelta(days=1)
+                # Create the payload with user id and expiration time
+                payload = {
+                    'user_id': user.pk,
+                    'exp': expiry_time
+                }
 
-            # Return the token as a JSON response
-            return JsonResponse({'token': token, 'success': True})
-        except Exception as err:
-            print(err)
-            return JsonResponse({'error': 'Some Error Has Occured!', 'success': False})
+                # Encode the payload into a JWT token
+                token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+
+                # Return the token as a JSON response
+                return JsonResponse({'token': token, 'success': True})
+            except:
+                return JsonResponse({'error': 'Incorrect password', 'success': False}, status=401)
+                  
+        except:
+            return JsonResponse({'error': 'Username not found', 'success': False}, status=404)
+            
+    except Exception as err:
+        print(err)
+        return JsonResponse({'error': 'Some Error Has Occured!', 'success': False})
 
 
 
