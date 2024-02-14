@@ -90,7 +90,7 @@ WSGI_APPLICATION = 'writManagement.wsgi.application'
 #         'ENGINE': 'django.db.backends.postgresql',
 #         'NAME': 'db_dss',
 # 	'USER':'postgres',
-# 	'PASSWORD':'9828',
+# 	'PASSWORD':'9828',  
 # 	"HOST":'127.0.0.1',
 # 	"PORT":'5432',
 #     }
