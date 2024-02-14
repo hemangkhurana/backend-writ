@@ -58,8 +58,8 @@ def addNewWrit(request):
                 else:        
                     oldWrit[key] = request.POST[key]
                     
-            if 'writRespondentNames' in request.POST:
-                writData['writRespondentNames'] = data['writRespondentNames'].split(",")
+            # if 'writRespondentNames' in request.POST:
+            #     writData['writRespondentNames'] = data['writRespondentNames'].split(",")
                 
             for attach in attachments:
                 if attach in request.FILES:
@@ -100,8 +100,8 @@ def addNewWrit(request):
                 if key in writCheck:
                     writData[key] = data[key]
             
-            if 'writRespondentNames' in data:
-                writData['writRespondentNames'] = data['writRespondentNames'].split(",")
+            # if 'writRespondentNames' in data:
+            #     writData['writRespondentNames'] = data['writRespondentNames'].split(",")
             for attach in attachments:
                 if attach in request.FILES:
                     file = request.FILES.get(attach)
@@ -138,7 +138,7 @@ def getWrit(request):
                 else:
                     temp[x] = str(result[x])
             
-            print(temp)
+            # print(temp)
             return JsonResponse({'success' : True, 'data' : temp})
         
         else:
