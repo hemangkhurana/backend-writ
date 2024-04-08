@@ -8,8 +8,9 @@ from django.conf import settings
 from django.urls import resolve
 import json
 User = get_user_model()
-# Create your views here.
 
+
+# View for login, uses jwt token for security checks
 @require_http_methods(["POST", "GET"])
 def get_jwt_token(request):
     if request.method == 'GET':
@@ -46,11 +47,10 @@ def get_jwt_token(request):
         return JsonResponse({'error': 'Some Error Has Occured!', 'success': False})
 
 
-
+# view for signup. It saves data in User django object that is connected to postgresql through settings.py
 @require_http_methods(["POST"])
 def signup(request):
     # Return the token as a JSON response
-    # user_data
     try:
         user_data = json.loads(request.body)
         user_data.pop('mobile')

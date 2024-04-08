@@ -26,6 +26,7 @@ SECRET_KEY = 'django-insecure-s^9fm3zp8f4-$zzwifr8w47dc@xy0yl+z4fa_ro_26z96#!2he
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# for now all the HOSTS are made allowed, after getting domain we can put selected domains only
 ALLOWED_HOSTS = ['*']
 
 
@@ -108,6 +109,7 @@ WSGI_APPLICATION = 'writManagement.wsgi.application'
 # }
 #############################################################################
 
+# Database credentials for postgresql 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',

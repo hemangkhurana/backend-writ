@@ -12,8 +12,8 @@ from bson import ObjectId
 from django.http import HttpResponse
 from datetime import datetime
 
-# Create your views here.
 
+# all fields that will be sent stored in mangodb objects
 writCheck = [
         'writNumber', 'writDate', 'writPetitionerName', 'writRespondentNames', 
         'writDepartment', 'writPetitionerPrayer', 'writCourtOrder', 'writDcComments',
@@ -21,6 +21,7 @@ writCheck = [
         'contemptText', 'contemptDcComments', 'writDepartment', 'writCloseDate', 'writClose'
     ]
 
+# All fields to be shown in writ page
 matrix = {
         'column1' : 'writNumber',
         'column2' : 'writPriority',
@@ -29,23 +30,25 @@ matrix = {
         'column5' :  'writDate'
     }
 
+# all file attachments 
 attachments = {'writFileAttachment', 'remarkFileAttachment', 'contemptFileAttachment', 'counterFileAttachment', 'courtOrderFileAttachment'}
 
+# data for filters
 tempFilterDateList = [None, None, [], [], None, None]
 tempMaxValue = [0,0,0,0,0,0]
-
 convertToIndex = {'first' : 0, 'second' : 1, 'third' : 2, 'fourth' : 3, 'fifth' : 4, 'sixth' : 5}
 
 
+
+# view to add writ or update any writ
 @require_http_methods(['POST'])
 def addNewWrit(request):
     try:    
         writNumber = request.POST['writNumber']
         oldWrit = writs.find_one({"writNumber" : writNumber})
-        # for x in request.POST:
-        #     print(x, request.POST[x])
         
         if oldWrit:
+            #updating new writ
             if 'isAddNew' in request.POST and request.POST['isAddNew'] == 'true':
                 return JsonResponse({'success' :False, 'error' : 'Cannot add same writ again'})
             
@@ -61,6 +64,7 @@ def addNewWrit(request):
             # if 'writRespondentNames' in request.POST:
             #     writData['writRespondentNames'] = data['writRespondentNames'].split(",")
                 
+            # handeling updates for attachments
             for attach in attachments:
                 if attach in request.FILES:
                     if attach in oldWrit and oldWrit[attach] !='':     
@@ -71,7 +75,7 @@ def addNewWrit(request):
                         oldWrit[attach] = str(file_id)
             
             
-            #### add what will happen if data is empty, need to update the filters ######
+            # handling filters for dateFilter and status filter
             if request.POST['work'] == 'first':
                 oldWrit['filterDateList'][0] = datetime.strptime( request.POST['writDate'], '%Y-%m-%d') 
                 oldWrit['writMaxValue'][5-0] = 1
@@ -82,7 +86,6 @@ def addNewWrit(request):
                 oldWrit['filterDateList'][4] = datetime.strptime( request.POST['contemptDate'], '%Y-%m-%d') 
                 oldWrit['writMaxValue'][5-4] = 1
             elif request.POST['work'] == 'sixth' and request.POST['writClose']=='true' :
-                # do simething
                 oldWrit['filterDateList'][5] = datetime.strptime( request.POST['writCloseDate'], '%Y-%m-%d') 
                 oldWrit['writMaxValue'][5-5] = 1
                 
@@ -90,6 +93,7 @@ def addNewWrit(request):
             return JsonResponse({'success' : True, 'message' : 'Writ updated successfully'})
             
         else:
+            # adding new writ
             writData = {}
             data = request.POST
             
@@ -118,18 +122,19 @@ def addNewWrit(request):
             writData['writMaxValue'] = writMaxValue
             
             writs.insert_one(writData)
-            # print(writData)
             return JsonResponse({'success' : True, 'message' : 'New writ added succesfully'})
             
     except Exception as err:
         return JsonResponse({'success':False,'error' : err, 'message' : 'Some error occured!'})
 
-    
+
+# getting writ data
 @require_http_methods(['POST'])
 def getWrit(request):
     try:
         writNumber = json.loads(request.body).get('writNumber',None)
         result = writs.find_one({'writNumber' : writNumber})
+        
         if result is not None:
             temp = {}
             for x in result:
@@ -138,7 +143,6 @@ def getWrit(request):
                 else:
                     temp[x] = str(result[x])
             
-            # print(temp)
             return JsonResponse({'success' : True, 'data' : temp})
         
         else:
@@ -146,6 +150,8 @@ def getWrit(request):
     except Exception as err:
         return JsonResponse({'success': False, 'error' : err, 'message' : 'Some error occured!'})
     
+    
+# getting most recent updated writs
 @require_http_methods(['GET'])
 def getLatestWrit(request):
     try:
@@ -153,6 +159,8 @@ def getLatestWrit(request):
         info = writs.find().sort('WritDate',-1).limit(20)
         data = []
         i = 1
+        
+        # fields present in matrix will be shown only
         for x in info:
             temp = {}
             temp['id'] = i
@@ -168,11 +176,13 @@ def getLatestWrit(request):
                     else:
                         temp[col] = x[matrix[col]]
             data.append(temp)
+            
         return JsonResponse({'success' : True, 'data' : data, 'message' : 'Sent data'})
     except Exception as err:
         return JsonResponse({'success': False, 'error' : err, 'message' : 'Some error occured!'})
 
 
+# filter and search 
 @require_http_methods(['POST'])
 def filterWrit(request):
     try : 
@@ -253,6 +263,8 @@ def filterWrit(request):
         
         data = []
         i = 1
+        
+        # fields present in matrix will be shown only
         for x in results:
             temp = {}
             temp['id'] = i
@@ -275,6 +287,7 @@ def filterWrit(request):
         return JsonResponse({'success': False, 'error' : err, 'message' : 'Some error occured!'})
 
 
+# downloading the pdfs
 @require_http_methods(['POST'])
 def downloadPdf(request):
     postData = json.loads(request.body)
@@ -293,6 +306,8 @@ def downloadPdf(request):
         return response
 
 
+# add new counters
+# all counters are sent individually so different conditions are set accordinly
 @require_http_methods(['POST'])
 def addCounters(request):
     try:    
@@ -352,6 +367,8 @@ def addCounters(request):
         return JsonResponse({'success' : False, 'error' : err})
   
     
+# add new orders
+# all orders are sent individually so different conditions are set accordinly
 @require_http_methods(['POST'])
 def addCourtOrder(request):
     try:
@@ -411,7 +428,7 @@ def addCourtOrder(request):
         return JsonResponse({'success' : False, 'error' : err})
   
     
-
+# getting order
 @require_http_methods(['POST'])
 def getCounters(request):
     try:
@@ -428,7 +445,8 @@ def getCounters(request):
         return JsonResponse({'success':False,'error':'problem in getting third.js from backend', 'message' : 'Some error occured'})
 
         
-        
+
+# getting counters      
 @require_http_methods(['POST'])
 def getCourtOrders(request):
     try:
@@ -445,6 +463,7 @@ def getCourtOrders(request):
         return JsonResponse({'success':False,'error':'problem in getting third.js from backend'})
 
 
+# delete writ data
 @require_http_methods(['POST'])
 def deleteWrit(request):
     try:
@@ -477,11 +496,12 @@ def deleteWrit(request):
         return JsonResponse({'success':False,'error':'problem in deleting writ in backend'})
 
 
-@require_http_methods(['POST'])
-def hemang(request):
-    try:
-        data = request.POST
-        print(data['writClose'] == 'true')
-        JsonResponse({'success': True, 'error': 'request data empty'})
-    except Exception as err:
-        return JsonResponse({'success':False, 'error':err})
+
+# @require_http_methods(['POST'])
+# def hemang(request):
+#     try:
+#         data = request.POST
+#         print(data['writClose'] == 'true')
+#         JsonResponse({'success': True, 'error': 'request data empty'})
+#     except Exception as err:
+#         return JsonResponse({'success':False, 'error':err})
