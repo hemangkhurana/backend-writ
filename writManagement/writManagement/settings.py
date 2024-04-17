@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "corsheaders",
     'writ',
     'common',
+    'schedule',
 ]
 
 MIDDLEWARE = [
@@ -96,28 +97,28 @@ WSGI_APPLICATION = 'writManagement.wsgi.application'
 #     }
 # }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'dssDB',
-# 	'USER':'postgres',
-# 	'PASSWORD':'7078',
-# 	"HOST":'127.0.0.1',
-# 	"PORT":'5432',
-#     }
-# }
-#############################################################################
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'writDBpostgre',
+        'NAME': 'dssDB',
 	'USER':'postgres',
-	'PASSWORD':'RajatGoyal',
-	"HOST":'34.28.126.107',
+	'PASSWORD':'7078',
+	"HOST":'127.0.0.1',
 	"PORT":'5432',
     }
 }
+#############################################################################
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'writDBpostgre',
+# 	'USER':'postgres',
+# 	'PASSWORD':'RajatGoyal',
+# 	"HOST":'34.28.126.107',
+# 	"PORT":'5432',
+#     }
+# }
 
 
 # Password validation

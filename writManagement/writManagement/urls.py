@@ -20,6 +20,5 @@ from django.urls import path, include
 urlpatterns = [
     path('user/',include('common.urls')),
     path('writ/',include('writ.urls')),
-    
-    
+    path('schedule/',include('schedule.urls')),
 ]
