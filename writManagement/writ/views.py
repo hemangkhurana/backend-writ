@@ -5,8 +5,8 @@ from django.core.paginator import Paginator
 import pymongo
 import json
 from datetime import datetime
-from .mongodb_connection import writs, gridFSWrit
-from .models import data 
+from .models import writs, gridFSWrit
+# from .models import data 
 import base64
 from bson import ObjectId
 from django.http import HttpResponse

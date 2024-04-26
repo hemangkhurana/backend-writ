@@ -1,6 +1,33 @@
 from django.db import models
 import pymongo
 from datetime import datetime
+import gridfs
+from mongodb_connection import writDB
+
+writs = writDB['writs']
+
+# gridfs for storing pdfs
+gridFSWrit =  gridfs.GridFS(writDB, collection='writ-pdfs')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #this just contain initial and overhead idea how writs will be processed 
 

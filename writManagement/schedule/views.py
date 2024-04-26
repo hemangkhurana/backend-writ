@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from datetime import datetime
+import json
 
 
 @require_http_methods(["GET"])
@@ -18,9 +19,9 @@ def get_meetings(request):
     events = [
         {
           'id': 1,
-          'title': 'Meeting 1',
-        #   'start': datetime(2024, 3, 10, 4, 0).isoformat(), 
-        #   'end': datetime(2024, 3, 10, 6, 0).isoformat(),   
+          'title': 'Meeting 111',
+          'start': datetime(2024, 3, 10, 4, 0), 
+          'end': datetime(2024, 3, 10, 6, 0),   
           'location': 'DC Office',
           'priority': 'high',
           'departments': ['Marketing', 'Development', 'HR'],
@@ -32,8 +33,8 @@ def get_meetings(request):
         {
           'id': 3,
           'title': 'Meeting 3',
-        #   'start': datetime(2024, 3, 10, 10, 0).isoformat(), 
-        #   'end': datetime(2024, 3, 10, 12, 0).isoformat(),   
+          'start': datetime(2024, 3, 10, 10, 0), 
+          'end': datetime(2024, 3, 10, 12, 0),   
           'location': 'DC Office',
           'priority': 'medium',
           'departments': ['Marketing', 'Development', 'HR'],
@@ -45,8 +46,8 @@ def get_meetings(request):
         {
           'id': 2,
           'title': 'Meeting 2',
-        #   'start': datetime(2024, 3, 25, 14, 0).isoformat(), 
-        #   'end': datetime(2024, 3, 25, 16, 0).isoformat(),    
+          'start': datetime(2024, 3, 25, 14, 0), 
+          'end': datetime(2024, 3, 25, 16, 0),    
           'location': 'DC Office',
           'priority': 'low',
           'departments': ['Marketing', 'Development', 'HR'],
@@ -57,3 +58,17 @@ def get_meetings(request):
         },
     ]
     return JsonResponse({'success': True, 'data': events})
+
+
+@require_http_methods(["POST"])
+def hemang(request):
+    data = json.loads(request.body)
+    print(data)
+    return JsonResponse({'success': True})
+
+@require_http_methods(["POST"])
+def add_department(request):
+    data = json.loads(request.body)
+    print(data)
+    return JsonResponse({'success': True})
+    
