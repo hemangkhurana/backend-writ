@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from datetime import datetime
 import json
-from .models import departments
+from .models import departments, meetings
 from bson import ObjectId
 
 
@@ -53,10 +53,26 @@ def get_meetings(request):
 
 
 @require_http_methods(["POST"])
-def hemang(request):
-    data = json.loads(request.body)
-    print(data)
-    return JsonResponse({'success': True})
+def create_new_meeting(request):
+    try:
+        data = json.loads(request.body)
+        print(data)
+        scheduleDate = datetime.strptime(data['scheduleDate'], '%Y-%m-%d').date()
+        scheduledStartTime = datetime.strptime(data['scheduledStartTime'], '%H:%M').time()
+        scheduledEndTime = datetime.strptime(data['scheduledEndTime'], '%H:%M').time()
+        meeting_data = {
+            'meetingSubject': data['meetingSubject'],
+            'scheduleDate': scheduleDate,
+            'scheduledLocation': data['scheduledLocation'],
+            'scheduledStartTime': scheduledStartTime,
+            'scheduledEndTime': scheduledEndTime,
+            # 'selectedPriority': data['selectedPriority']
+        }
+        meetings.insert_one(meeting_data)
+        print(meeting_data)
+        return JsonResponse({'success': True, 'message': 'successfully created meeting'})
+    except Exception as e:
+        return JsonResponse({'success' : False, 'error' : e})
 
 @require_http_methods(["POST"])
 def add_department(request):
