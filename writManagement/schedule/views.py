@@ -6,67 +6,109 @@ from .models import departments, meetings
 from bson import ObjectId
 
 
+meeting_info = ['title', 'date', 'startTime', 'endTime' , 'location', 'priority', 'minutesOfMeeting', 'summary']   
+meeting_array_info = ['departments', 'groups', 'users']
+
+conversion = {
+    'title' :  'meetingSubject',
+    'date' : 'scheduleDate',
+    'location' : 'scheduledLocation',
+    'startTime' : 'scheduledStartTime',
+    'endTime' : 'scheduledEndTime',
+    'priority' : 'selectedPriority',
+    'minutesOfMeeting' : 'minutesOfMeeting',
+    'summary' : 'summary',
+    'departments': 'departments',
+    'groups' : 'groups', 
+    'users' : 'users' 
+}
+
 @require_http_methods(["GET"])
 def get_meetings(request):
-    events = [
-        {
-            'id': 1,
-            'title': 'Meeting 111',
-            'start': datetime(2024, 3, 10, 4, 0), 
-            'end': datetime(2024, 3, 10, 6, 0),   
-            'location': 'DC Office',
-            'priority': 'high',
-            'departments': ['Marketing', 'Development', 'HR'],
-            'groups': ['Group 1', 'Group 2'],
-            'users': ['User 1', 'User 2'],
-            'minutesOfMeeting': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            'summary': 'Meeting went well. Discussed project milestones and assigned tasks.',
-        },
-        {
-            'id': 3,
-            'title': 'Meeting 3',
-            'start': datetime(2024, 3, 10, 10, 0), 
-            'end': datetime(2024, 3, 10, 12, 0),   
-            'location': 'DC Office',
-            'priority': 'medium',
-            'departments': ['Marketing', 'Development', 'HR'],
-            'groups': ['Group 3'],
-            'users': ['User 1', 'User 2'],
-            'minutesOfMeeting': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            'summary': 'Meeting went well. Discussed project milestones and assigned tasks.',
-        },
-        {
-            'id': 2,
-            'title': 'Meeting 2',
-            'start': datetime(2024, 3, 25, 14, 0), 
-            'end': datetime(2024, 3, 25, 16, 0),    
-            'location': 'DC Office',
-            'priority': 'low',
-            'departments': ['Marketing', 'Development', 'HR'],
-            'groups': ['Group 2'],
-            'users': ['User 1', 'User 2'],
-            'minutesOfMeeting': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            'summary': 'Meeting went well. Discussed project milestones and assigned tasks.',
-        },
-    ]
-    return JsonResponse({'success': True, 'data': events})
+    try :
+        allMeetings = meetings.find({})
+        events = []
+        for meet in allMeetings:
+            currentMeet = {}
+            for info in meeting_info:
+                if conversion[info] in meet:
+                    currentMeet[info] = meet[conversion[info]]
+                else:
+                    currentMeet[info] = ""
+            for info in meeting_array_info:
+                if conversion[info] in meet:
+                    currentMeet[info] = meet[conversion[info]]
+                else:
+                    currentMeet[info] = []
+                    
+            events.append(currentMeet)
+        
+    except Exception as e:
+        return JsonResponse({'success' : False, 'error' : e})
+    
+    
+    # events = [
+    #     {
+    #         'id': 1,
+    #         'title': 'Meeting 111',
+    #         'start': datetime(2024, 3, 10, 4, 0), 
+    #         'end': datetime(2024, 3, 10, 6, 0),   
+    #         'location': 'DC Office',
+    #         'priority': 'high',
+    #         'departments': ['Marketing', 'Development', 'HR'],
+    #         'groups': ['Group 1', 'Group 2'],
+    #         'users': ['User 1', 'User 2'],
+    #         'minutesOfMeeting': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    #         'summary': 'Meeting went well. Discussed project milestones and assigned tasks.',
+    #     },
+    #     {
+    #         'id': 3,
+    #         'title': 'Meeting 3',
+    #         'start': datetime(2024, 3, 10, 10, 0), 
+    #         'end': datetime(2024, 3, 10, 12, 0),   
+    #         'location': 'DC Office',
+    #         'priority': 'medium',
+    #         'departments': ['Marketing', 'Development', 'HR'],
+    #         'groups': ['Group 3'],
+    #         'users': ['User 1', 'User 2'],
+    #         'minutesOfMeeting': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    #         'summary': 'Meeting went well. Discussed project milestones and assigned tasks.',
+    #     },
+    #     {
+    #         'id': 2,
+    #         'title': 'Meeting 2',
+    #         'start': datetime(2024, 3, 25, 14, 0), 
+    #         'end': datetime(2024, 3, 25, 16, 0),    
+    #         'location': 'DC Office',
+    #         'priority': 'low',
+    #         'departments': ['Marketing', 'Development', 'HR'],
+    #         'groups': ['Group 2'],
+    #         'users': ['User 1', 'User 2'],
+    #         'minutesOfMeeting': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    #         'summary': 'Meeting went well. Discussed project milestones and assigned tasks.',
+    #     },
+    # ]
 
 
 @require_http_methods(["POST"])
 def create_new_meeting(request):
     try:
         data = json.loads(request.body)
-        print(data)
-        scheduleDate = datetime.strptime(data['scheduleDate'], '%Y-%m-%d').date()
-        scheduledStartTime = datetime.strptime(data['scheduledStartTime'], '%H:%M').time()
-        scheduledEndTime = datetime.strptime(data['scheduledEndTime'], '%H:%M').time()
+        scheduleDate = datetime.strptime(data['scheduleDate'], '%Y-%m-%d')
+        scheduledStartTime = datetime.strptime(data['scheduledStartTime'], '%H:%M')
+        scheduledEndTime = datetime.strptime(data['scheduledEndTime'], '%H:%M')
         meeting_data = {
             'meetingSubject': data['meetingSubject'],
             'scheduleDate': scheduleDate,
             'scheduledLocation': data['scheduledLocation'],
             'scheduledStartTime': scheduledStartTime,
             'scheduledEndTime': scheduledEndTime,
-            # 'selectedPriority': data['selectedPriority']
+            'selectedPriority': data['selectedPriority']['key'],
+            'minutesOfMeeting' : "",
+            'summary' : "",
+            'departments' : [],
+            'groups' : [],
+            'users' : []
         }
         meetings.insert_one(meeting_data)
         print(meeting_data)
