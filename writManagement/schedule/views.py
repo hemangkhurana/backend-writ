@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from datetime import datetime
 import json
+from .models import departments
 
 
 @require_http_methods(["GET"])
@@ -68,7 +69,19 @@ def hemang(request):
 
 @require_http_methods(["POST"])
 def add_department(request):
-    data = json.loads(request.body)
-    print(data)
-    return JsonResponse({'success': True})
+    try:
+        data = json.loads(request.body)
+        departments.insert_one(data)
+        print(data)
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': e})
     
+@require_http_methods({"GET"})
+def get_departments(request):
+    try:
+        all_departments = departments.find({})
+        print(all_departments)
+        return JsonResponse({'success': True, 'data' : all_departments})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': e})
