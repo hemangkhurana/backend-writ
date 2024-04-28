@@ -23,9 +23,12 @@ conversion = {
     'users' : 'users' 
 }
 
+
+#return all the meetings that are under the user
 @require_http_methods(["GET"])
 def get_meetings(request):
     try :
+        # allMeetings = meetings.find({'users' : request.user.id})
         allMeetings = meetings.find({})
         events = []
         for meet in allMeetings:
@@ -42,6 +45,8 @@ def get_meetings(request):
                     currentMeet[info] = []
                     
             events.append(currentMeet)
+            
+        return JsonResponse({'success':True, 'data' : events})
         
     except Exception as e:
         return JsonResponse({'success' : False, 'error' : e})
@@ -121,6 +126,7 @@ def add_department(request):
     try:
         data = json.loads(request.body)
         departments.insert_one(data)
+        # print("----------")
         print(data)
         return JsonResponse({'success': True})
     except Exception as e:
@@ -137,8 +143,9 @@ def get_departments(request):
             temp['_id'] = str(x['_id'])
             temp['departmentName'] = x['departmentName']
             temp['departmentDescription'] = x['departmentDescription']
+            temp['departmentUsers'] = x['departmentUsers']
             data.append(temp)
-        print(data)
+        # print(data)
         return JsonResponse({'success': True, 'data' : data})
     except Exception as e:
         return JsonResponse({'success': False, 'error': e})

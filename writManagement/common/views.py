@@ -63,3 +63,16 @@ def signup(request):
     except Exception as err:
         print(err)
         return JsonResponse({'error': "Some Error Has Occured in creating auth.user!", 'success': False})
+    
+
+@require_http_methods(["GET"])
+def getAllUsers(request):
+    x =  User.objects.all().values()
+    data = []
+    for person in x:
+        data.append({
+            'id' : person['id'],
+            'first_name' : person['first_name'],
+            'last_name' : person['last_name']
+        })
+    return JsonResponse({'success': True, 'data': data })
