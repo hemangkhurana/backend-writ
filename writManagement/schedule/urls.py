@@ -7,4 +7,6 @@ urlpatterns = [
     path('get_departments', views.get_departments),
     path('delete_department', views.delete_department),
     path('update_department', views.update_department),
+    path('delete_meeting', views.delete_meeting),
+    path('update_meeting', views.update_meeting),
 ]

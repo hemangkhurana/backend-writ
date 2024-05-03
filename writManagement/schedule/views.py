@@ -33,6 +33,7 @@ def get_meetings(request):
         events = []
         for meet in allMeetings:
             currentMeet = {}
+            currentMeet['_id'] = str(meet['_id'])
             for info in meeting_info:
                 if conversion[info] in meet:
                     currentMeet[info] = meet[conversion[info]]
@@ -45,6 +46,7 @@ def get_meetings(request):
                     currentMeet[info] = []
                     
             events.append(currentMeet)
+            # print("Hemang" , events)
             
         return JsonResponse({'success':True, 'data' : events})
         
@@ -185,3 +187,55 @@ def update_department(request):
             return JsonResponse({'success': False, 'message': 'Object ID not provided'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': e})
+    
+@require_http_methods(["POST"])
+def delete_meeting(request):
+    try:
+        data = json.loads(request.body)
+        _id = data.get('_id')
+        print(_id)
+        result = meetings.delete_one({'_id': ObjectId(_id)})
+
+        # Check if the document was deleted successfully
+        if result.deleted_count == 1:
+            return JsonResponse({'success': True, 'message': 'Meeting deleted successfully'})
+        else:
+            return JsonResponse({'success': False, 'message': 'Meeting not found or not deleted'})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': 'Meeting not found or not deleted' + e})
+
+@require_http_methods(["POST"])
+def update_meeting(request):
+    try:
+        data = json.loads(request.body)
+        meeting_id = data.get('_id')
+        scheduleDate = datetime.strptime(data['scheduleDate'], '%Y-%m-%d')
+        scheduledStartTime = datetime.strptime(data['scheduledStartTime'], '%H:%M')
+        scheduledEndTime = datetime.strptime(data['scheduledEndTime'], '%H:%M')
+        meeting_data = {
+            'meetingSubject': data['meetingSubject'],
+            'scheduleDate': scheduleDate,
+            'scheduledLocation': data['scheduledLocation'],
+            'scheduledStartTime': scheduledStartTime,
+            'scheduledEndTime': scheduledEndTime,
+            # 'selectedPriority': data['selectedPriority']['key'],
+            'minutesOfMeeting' : data['meetingMinutes'],
+            'summary' : data['meetingSummary'],
+        }
+        print(data)
+        update_data = {}
+        for key, value in data.items():
+            if key in conversion:
+                update_data[conversion[key]] = value
+        result = meetings.update_one(
+            {'_id': ObjectId(meeting_id)},
+            {'$set': meeting_data}
+        )
+        if result:
+            return JsonResponse({'success': True, 'message': 'Meeting updated successfully'})
+        else :
+            return JsonResponse({'success': False, 'message': "Meeting not found"})
+    except Exception as e:
+        print("update_meeting Not working")
+        return JsonResponse({'success': False, 'message': 'Meeting not found or not updated' + e})

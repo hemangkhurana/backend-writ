@@ -87,27 +87,27 @@ WSGI_APPLICATION = 'writManagement.wsgi.application'
 
 
 #########################################################################
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'db_dss',
-	'USER':'postgres',
-	'PASSWORD':'9828',  
-	"HOST":'127.0.0.1',
-	"PORT":'5432',
-    }
-}
-
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'dssDB',
+#         'NAME': 'db_dss',
 # 	'USER':'postgres',
-# 	'PASSWORD':'7078',
+# 	'PASSWORD':'9828',  
 # 	"HOST":'127.0.0.1',
 # 	"PORT":'5432',
 #     }
 # }
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'dssDB',
+	'USER':'postgres',
+	'PASSWORD':'7078',
+	"HOST":'127.0.0.1',
+	"PORT":'5432',
+    }
+}
 #############################################################################
 
 # DATABASES = {
