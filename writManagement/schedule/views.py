@@ -177,9 +177,9 @@ def update_department(request):
         if department_id:
             result = departments.update_one(
                 {'_id': ObjectId(department_id)},
-                {'$set': {'departmentName': data['departmentName'], 'departmentDescription': data['departmentDescription']}}
+                {'$set': {'departmentName': data['departmentName'], 'departmentDescription': data['departmentDescription'], 'departmentUsers' : data['departmentUsers']}}
             )
-            if result.modified_count == 1:
+            if result.modified_count == 1: 
                 return JsonResponse({'success': True, 'message': 'Department Updated Successfully'})
             else:
                 return JsonResponse({'success': False, 'message': 'Department not found or no changes made'})
@@ -239,3 +239,19 @@ def update_meeting(request):
     except Exception as e:
         print("update_meeting Not working")
         return JsonResponse({'success': False, 'message': 'Meeting not found or not updated' + e})
+    
+    
+@require_http_methods(['POST'])
+def searchInMeeting(request):
+    try: 
+        data = json.loads(request.body)
+        searchText = data.get('searchText')
+        searchText = searchText.strip()
+        if searchText == "":
+            return JsonResponse({'success' : True, 'data' : []})
+        searchFilter = [{"$text": {"$search": searchText}}]
+        result = meetings.find(searchFilter)
+        return JsonResponse({'success' : True, 'data' : result})
+    except Exception as err:
+        return JsonResponse({'success': False, 'error' : err, 'message' : 'Some error occured!'})
+
