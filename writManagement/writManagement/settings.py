@@ -86,40 +86,17 @@ WSGI_APPLICATION = 'writManagement.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 
-#########################################################################
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'db_dss',
+        # 'NAME': 'database Name',  add database name here
 	'USER':'postgres',
-	'PASSWORD':'9828',  
+	# 'PASSWORD':'your_password',  add password here
 	"HOST":'127.0.0.1',
 	"PORT":'5432',
     }
 }
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'dssDB',
-# 	'USER':'postgres',
-# 	'PASSWORD':'7078',
-# 	"HOST":'127.0.0.1',
-# 	"PORT":'5432',
-#     }
-# }
-#############################################################################
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'writDBpostgre',
-# 	'USER':'postgres',
-# 	'PASSWORD':'RajatGoyal',
-# 	"HOST":'34.28.126.107',
-# 	"PORT":'5432',
-#     }
-# }
 
 
 # Password validation
